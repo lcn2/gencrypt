@@ -1,0 +1,140 @@
+#!/bin/bash
+#
+# gencrypt - gpg encrypt files
+#
+# @(#) $Revision$
+# @(#) $Id$
+# @(#) $Source$
+#
+# Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
+#
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright, this permission notice and text
+# this comment, and the disclaimer below appear in all of the following:
+#
+#       supporting documentation
+#       source copies
+#       source works derived from this source
+#       binaries derived from this source or from derived source
+#
+# LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+# EVENT SHALL LANDON CURT NOLL BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+# USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+# chongo (Landon Curt Noll, http://www.isthe.com/chongo/index.html) /\oo/\
+#
+# Share and enjoy! :-)
+
+
+# setup
+#
+CODE=0
+MY_KEY="chongo-gnupg@asthe.com"
+USAGE="$0 [-g gpg-key-name (def: chongo-gnupg@asthe.com)] [-h] file ..."
+
+# parse args
+#
+set `/usr/bin/getopt g:h $*`
+if [[ $? != 0 ]]; then
+    echo "usage: $USAGE" 1>&2
+    exit 1
+fi
+for i in $*; do
+    case "$i" in
+    -g) shift; MY_KEY="$2"; ;;
+    -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
+    --) shift; break ;;
+    esac
+done
+if [[ $# -eq 0 ]]; then
+    echo "$0: missing file arg(s)" 1>&2
+    exit 2
+fi
+
+# encrypt files
+#
+while [[ $# -gt 0 ]]; do
+
+    # get next arg
+    #
+    arg="$1"
+    shift
+    export dir=$(dirname "$arg")
+    export basefile=$(basename "$arg")
+    file="$dir/$basefile"
+    gpgfile="$file.gpg"
+
+    # firewall
+    #
+    if [[ ! -e "$file" ]]; then
+	echo "$0: $arg: $file does not exist, skipping" 1>&2
+	CODE=3
+	continue
+    fi
+    if [[ ! -f "$file" ]]; then
+	echo "$0: $arg: $file is not a file, skipping" 1>&2
+	CODE=4
+	continue
+    fi
+    if [[ ! -r "$file" ]]; then
+	echo "$0: $arg: $file is not readable, skipping" 1>&2
+	CODE=5
+	continue
+    fi
+    if [[ ! -w "$dir" ]]; then
+	echo "$0: $arg: $dir is not in a writable directory, skipping" 1>&2
+	CODE=6
+	continue
+    fi
+    if [[ -e "$gpgfile" ]]; then
+	echo "$0: $arg: $gpgfile exists, skipping" 1>&2
+	CODE=7
+	continue
+    fi
+
+    # encrypt
+    #
+    echo "encrypting $file"
+    gpg -r "$MY_KEY" --encrypt-files "$file"
+    status="$?"
+    if [[ $status -ne 0 ]]; then
+	echo "$0: $arg: gpg error code: $status" 1>&2
+	CODE=8
+	continue
+    fi
+    if [[ ! -f "$gpgfile" ]]; then
+	echo "$0: $arg: missing gpg file: $gpgfile" 1>&2
+	CODE=9
+	continue
+    fi
+    if [[ ! -s "$gpgfile" ]]; then
+	echo "$0: $arg: empty gpg file: $gpgfile" 1>&2
+	CODE=10
+	continue
+    fi
+
+    # securely remove the old file
+    #
+    echo "wiping old $dir/$basefile"
+    (cd "$dir"; wipe -v "$basefile")
+    status="$?"
+    if [[ $status -ne 0 ]]; then
+	echo "$0: $arg: wipe error code: $status" 1>&2
+	CODE=11
+	continue
+    fi
+    if [[ -f "$file" ]]; then
+	echo "$0: $arg: wipe did not remove file: $dir/$basefile" 1>&2
+	CODE=12
+	continue
+    fi
+done
+
+# All Done!!! -- Jessica Noll, Age 2
+#
+exit "$CODE"

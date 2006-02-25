@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+# gdecrypt - gpg decrypt a file
+#
+# @(#) $Revision$
+# @(#) $Id$
+# @(#) $Source$
+#
+# Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
+#
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright, this permission notice and text
+# this comment, and the disclaimer below appear in all of the following:
+#
+#       supporting documentation
+#       source copies
+#       source works derived from this source
+#       binaries derived from this source or from derived source
+#
+# LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+# EVENT SHALL LANDON CURT NOLL BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+# USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+# chongo (Landon Curt Noll, http://www.isthe.com/chongo/index.html) /\oo/\
+#
+# Share and enjoy! :-)
+
+
+# setup
+#
+CODE=0
+USAGE="$0 [-h] file.gpg ..."
+
+# parse args
+#
+set -- `/usr/bin/getopt h $*`
+if [[ $? != 0 ]]; then
+    echo "usage: $USAGE" 1>&2
+    exit 1
+fi
+for i in $*; do
+    case "$i" in
+    -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
+    --) shift; break ;;
+    esac
+    shift
+done
+if [[ $# -eq 0 ]]; then
+    echo "$0: missing file arg(s)" 1>&2
+    exit 2
+fi
+
+# decrypt files
+#
+while [[ $# -gt 0 ]]; do
+
+    # get next arg
+    #
+    arg="$1"
+    shift
+    export dir=$(dirname "$arg")
+    export gpgbase=$(basename "$arg")
+    gpgfile="$dir/$gpgbase"
+    filebase="${gpgbase%.gpg}"
+    file="$dir/$filebase"
+
+    # firewall
+    #
+    if [[ ! -e "$gpgfile" ]]; then
+	echo "$0: $arg: $gpgfile does not exist, skipping" 1>&2
+	CODE=3
+	continue
+    fi
+    if [[ ! -f "$gpgfile" ]]; then
+	echo "$0: $arg: $gpgfile is not a file, skipping" 1>&2
+	CODE=4
+	continue
+    fi
+    if [[ ! -r "$gpgfile" ]]; then
+	echo "$0: $arg: $gpgfile is not readable, skipping" 1>&2
+	CODE=5
+	continue
+    fi
+    if [[ ! -w "$dir" ]]; then
+	echo "$0: $arg: $dir is not in a writable directory, skipping" 1>&2
+	CODE=6
+	continue
+    fi
+    if [[ "$file" = "$gpgfile" ]]; then
+	echo "$0: $arg: $gpgfile: does not end in .gpg, skipping" 1>&2
+	CODE=7
+	continue
+    fi
+    if [[ -e "$file" ]]; then
+	echo "$0: $arg: $file exists, skipping" 1>&2
+	CODE=8
+	continue
+    fi
+
+    # decrypt
+    #
+    echo "decrypting $gpgfile"
+    gpg --decrypt-files "$gpgfile"
+    status="$?"
+    if [[ $status -ne 0 ]]; then
+	echo "$0: $arg: gpg error code: $status" 1>&2
+	CODE=9
+	continue
+    fi
+    if [[ ! -f "$file" ]]; then
+	echo "$0: $arg: missing decrypted file: $file" 1>&2
+	CODE=10
+	continue
+    fi
+    if [[ ! -s "$file" ]]; then
+	echo "$0: $arg: empty decrypted file: $file" 1>&2
+	CODE=11
+	continue
+    fi
+
+    # securely remove the old file
+    #
+    echo "wiping old $dir/$gpgbase"
+    (cd "$dir"; wipe -v "$gpgbase")
+    status="$?"
+    if [[ $status -ne 0 ]]; then
+	echo "$0: $arg: wipe error code: $status" 1>&2
+	CODE=12
+	continue
+    fi
+    if [[ -f "$gpgfile" ]]; then
+	echo "$0: $arg: wipe did not remove file" 1>&2
+	CODE=13
+	continue
+    fi
+done
+
+# All Done!!! -- Jessica Noll, Age 2
+#
+exit "$CODE"
