@@ -3,9 +3,9 @@
 #
 # gncrypt - safe gpg file encrypt/decrypt
 #
-# @(#) $Revision$
-# @(#) $Id$
-# @(#) $Source$
+# @(#) $Revision: 1.1 $
+# @(#) $Id: Makefile,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/Makefile,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -47,10 +47,8 @@ configure:
 	@echo nothing to configure
 
 clean quick_clean quick_distclean distclean:
-	@echo rule to clean or empty rule if nothing is built
 
 clobber quick_clobber: clean
-	@echo rule to clobber or empty rule if nothing is built
 
 install: all
-	perhaps ${INSTALL} -m 0555 ${TARGETS} ${DESTDIR}
+	${INSTALL} -m 0555 ${TARGETS} ${DESTDIR}
