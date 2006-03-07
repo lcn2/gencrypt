@@ -2,9 +2,9 @@
 #
 # gencrypt - gpg encrypt files
 #
-# @(#) $Revision$
-# @(#) $Id$
-# @(#) $Source$
+# @(#) $Revision: 1.1 $
+# @(#) $Id: gencrypt,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gencrypt,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -121,6 +121,14 @@ while [[ $# -gt 0 ]]; do
     # securely remove the old file
     #
     echo "wiping old $dir/$basefile"
+    if [[ ! -w "$dir/$basefile" ]]; then
+	chmod +w "$dir/$basefile" > /dev/null 2>&1
+    fi
+    if [[ ! -w "$dir/$basefile" ]]; then
+	echo "$0: $arg: cannot make writable: $basefile" 1>&2
+	CODE=12
+	continue
+    fi
     (cd "$dir"; wipe -v "$basefile")
     status="$?"
     if [[ $status -ne 0 ]]; then
@@ -128,7 +136,7 @@ while [[ $# -gt 0 ]]; do
 	CODE=11
 	continue
     fi
-    if [[ -f "$file" ]]; then
+    if [[ -f "$dir/$basefile" ]]; then
 	echo "$0: $arg: wipe did not remove file: $dir/$basefile" 1>&2
 	CODE=12
 	continue

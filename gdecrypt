@@ -2,9 +2,9 @@
 #
 # gdecrypt - gpg decrypt a file
 #
-# @(#) $Revision$
-# @(#) $Id$
-# @(#) $Source$
+# @(#) $Revision: 1.1 $
+# @(#) $Id: gdecrypt,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gdecrypt,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -123,19 +123,18 @@ while [[ $# -gt 0 ]]; do
 	continue
     fi
 
-    # securely remove the old file
+    # remove the gpgfile we no longer need
     #
-    echo "wiping old $dir/$gpgbase"
-    (cd "$dir"; wipe -v "$gpgbase")
-    status="$?"
-    if [[ $status -ne 0 ]]; then
-	echo "$0: $arg: wipe error code: $status" 1>&2
+    echo "removing old $dir/$gpgbase"
+    rm -f "$dir/$gpgbase"
+    if [[ -e "$dir/$gpgbase" ]]; then
+	echo "$0: $arg: cannot remove old: $gpgbase" 1>&2
 	CODE=12
 	continue
     fi
-    if [[ -f "$gpgfile" ]]; then
+    if [[ -f "$dir/$gpgfile" ]]; then
 	echo "$0: $arg: wipe did not remove file" 1>&2
-	CODE=13
+	CODE=14
 	continue
     fi
 done
