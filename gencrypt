@@ -2,8 +2,8 @@
 #
 # gencrypt - gpg encrypt files
 #
-# @(#) $Revision: 1.1 $
-# @(#) $Id: gencrypt,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
+# @(#) $Revision: 1.2 $
+# @(#) $Id: gencrypt,v 1.2 2006/03/07 07:55:20 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gencrypt,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
@@ -34,24 +34,24 @@
 # setup
 #
 CODE=0
-MY_KEY="chongo-gnupg@asthe.com"
-USAGE="$0 [-g gpg-key-name (def: chongo-gnupg@asthe.com)] [-h] file ..."
+MY_KEY="chongo-oldpgp@asthe.com"
+USAGE="$0 [-g gpg-key-name (def: chongo-oldpgp@asthe.com)] [-h] file ..."
 
 # parse args
 #
-set `/usr/bin/getopt g:h $*`
-if [[ $? != 0 ]]; then
-    echo "usage: $USAGE" 1>&2
-    exit 1
-fi
-for i in $*; do
-    case "$i" in
-    -g) shift; MY_KEY="$2"; ;;
+PARSE=`/usr/bin/getopt -o g:h -n gencrypt -- "$@"`
+if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
+eval set -- "$PARSE"
+while true; do
+    case "$1" in
+    -g) MY_KEY="$2"; shift ;;
     -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
     --) shift; break ;;
+    *) echo "$0: Fatal internal getopt error" 1>&2 ; exit 2 ;;
     esac
+    shift
 done
-if [[ $# -eq 0 ]]; then
+if [[ "$#" -lt 1 ]]; then
     echo "$0: missing file arg(s)" 1>&2
     exit 2
 fi
