@@ -2,8 +2,8 @@
 #
 # gdecrypt - gpg decrypt a file
 #
-# @(#) $Revision: 1.1 $
-# @(#) $Id: gdecrypt,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
+# @(#) $Revision: 1.2 $
+# @(#) $Id: gdecrypt,v 1.2 2006/03/07 07:55:20 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gdecrypt,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
@@ -38,19 +38,18 @@ USAGE="$0 [-h] file.gpg ..."
 
 # parse args
 #
-set -- `/usr/bin/getopt h $*`
-if [[ $? != 0 ]]; then
-    echo "usage: $USAGE" 1>&2
-    exit 1
-fi
-for i in $*; do
-    case "$i" in
+PARSE=`/usr/bin/getopt -o h -n gdecrypt -- "$@"`
+if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
+eval set -- "$PARSE"
+while true; do
+    case "$1" in
     -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
     --) shift; break ;;
+    *) echo "$0: Fatal internal getopt error" 1>&2 ; exit 2 ;;
     esac
     shift
 done
-if [[ $# -eq 0 ]]; then
+if [[ "$#" -lt 1 ]]; then
     echo "$0: missing file arg(s)" 1>&2
     exit 2
 fi
