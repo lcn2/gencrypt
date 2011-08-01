@@ -2,11 +2,11 @@
 #
 # gencrypt - gpg encrypt files
 #
-# @(#) $Revision: 1.2 $
-# @(#) $Id: gencrypt,v 1.2 2006/03/07 07:55:20 chongo Exp chongo $
+# @(#) $Revision: 1.3 $
+# @(#) $Id: gencrypt,v 1.3 2011/01/25 04:07:46 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gencrypt,v $
 #
-# Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2006-2011 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -34,18 +34,24 @@
 # setup
 #
 CODE=0
+KEEP=
 MY_KEY="chongo-oldpgp@asthe.com"
-USAGE="$0 [-g gpg-key-name (def: chongo-oldpgp@asthe.com)] [-h] file ..."
+USAGE="$0 [-g gpg-key-name] [-h] [-k] file ...
+
+    -g gpg-key-name	(def: chongo-oldpgp@asthe.com)
+    -h			print help
+    -k			keep original file"
 
 # parse args
 #
-PARSE=`/usr/bin/getopt -o g:h -n gencrypt -- "$@"`
+PARSE=`/usr/bin/getopt -o g:hk -n gencrypt -- "$@"`
 if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
 eval set -- "$PARSE"
 while true; do
     case "$1" in
     -g) MY_KEY="$2"; shift ;;
     -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
+    -k) KEEP=true ;;
     --) shift; break ;;
     *) echo "$0: Fatal internal getopt error" 1>&2 ; exit 2 ;;
     esac
@@ -118,28 +124,30 @@ while [[ $# -gt 0 ]]; do
 	continue
     fi
 
-    # securely remove the old file
+    # securely remove the old file unless -k
     #
-    echo "wiping old $dir/$basefile"
-    if [[ ! -w "$dir/$basefile" ]]; then
-	chmod +w "$dir/$basefile" > /dev/null 2>&1
-    fi
-    if [[ ! -w "$dir/$basefile" ]]; then
-	echo "$0: $arg: cannot make writable: $basefile" 1>&2
-	CODE=12
-	continue
-    fi
-    (cd "$dir"; wipe -v "$basefile")
-    status="$?"
-    if [[ $status -ne 0 ]]; then
-	echo "$0: $arg: wipe error code: $status" 1>&2
-	CODE=11
-	continue
-    fi
-    if [[ -f "$dir/$basefile" ]]; then
-	echo "$0: $arg: wipe did not remove file: $dir/$basefile" 1>&2
-	CODE=12
-	continue
+    if [ -z "$KEEP" ]; then
+	echo "wiping old $dir/$basefile"
+	if [[ ! -w "$dir/$basefile" ]]; then
+	    chmod +w "$dir/$basefile" > /dev/null 2>&1
+	fi
+	if [[ ! -w "$dir/$basefile" ]]; then
+	    echo "$0: $arg: cannot make writable: $basefile" 1>&2
+	    CODE=11
+	    continue
+	fi
+	(cd "$dir"; wipe -v "$basefile")
+	status="$?"
+	if [[ $status -ne 0 ]]; then
+	    echo "$0: $arg: wipe error code: $status" 1>&2
+	    CODE=12
+	    continue
+	fi
+	if [[ -f "$dir/$basefile" ]]; then
+	    echo "$0: $arg: wipe did not remove file: $dir/$basefile" 1>&2
+	    CODE=13
+	    continue
+	fi
     fi
 done
 
