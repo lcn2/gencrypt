@@ -3,9 +3,9 @@
 #
 # gncrypt - safe gpg file encrypt/decrypt
 #
-# @(#) $Revision: 1.1 $
-# @(#) $Id: Makefile,v 1.1 2006/02/25 19:11:14 chongo Exp chongo $
-# @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/Makefile,v $
+# @(#) $Revision: 1.2 $
+# @(#) $Id: Makefile,v 1.2 2006/02/25 23:36:13 chongo Exp root $
+# @(#) $Source: /usr/local/src/bin/gencrypt/RCS/Makefile,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -34,7 +34,7 @@
 
 SHELL= /bin/sh
 
-TOPNAME= cmd
+TOPNAME= bin
 INSTALL= install
 
 DESTDIR= /usr/local/bin
