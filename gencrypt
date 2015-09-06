@@ -2,8 +2,8 @@
 #
 # gencrypt - gpg encrypt files
 #
-# @(#) $Revision: 1.4 $
-# @(#) $Id: gencrypt,v 1.4 2011/08/01 11:31:17 chongo Exp chongo $
+# @(#) $Revision: 1.5 $
+# @(#) $Id: gencrypt,v 1.5 2011/08/01 11:45:51 chongo Exp adm $
 # @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gencrypt,v $
 #
 # Copyright (c) 2006-2011 by Landon Curt Noll.  All Rights Reserved.
@@ -44,12 +44,11 @@ USAGE="$0 [-g gpg-key-name] [-h] [-k] file ...
 
 # parse args
 #
-PARSE=`/usr/bin/getopt -o g:hk -n gencrypt -- "$@"`
+set -- `/usr/bin/getopt g:hk $*`
 if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
-eval set -- "$PARSE"
 while true; do
     case "$1" in
-    -g) MY_KEY="$2"; shift ;;
+    -g) MY_KEY="$2"; ;;
     -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
     -k) KEEP=true ;;
     --) shift; break ;;

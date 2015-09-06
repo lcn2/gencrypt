@@ -2,8 +2,8 @@
 #
 # gdecrypt - gpg decrypt a file
 #
-# @(#) $Revision: 1.4 $
-# @(#) $Id: gdecrypt,v 1.4 2011/08/01 11:31:17 chongo Exp chongo $
+# @(#) $Revision: 1.5 $
+# @(#) $Id: gdecrypt,v 1.5 2011/08/01 11:45:51 chongo Exp adm $
 # @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gdecrypt,v $
 #
 # Copyright (c) 2006-2011 by Landon Curt Noll.  All Rights Reserved.
@@ -42,9 +42,8 @@ USAGE="$0 [-h] [-k] file.gpg ...
 
 # parse args
 #
-PARSE=`/usr/bin/getopt -o hk -n gdecrypt -- "$@"`
+set -- `/usr/bin/getopt hk $*`
 if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
-eval set -- "$PARSE"
 while true; do
     case "$1" in
     -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
