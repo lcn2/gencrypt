@@ -2,9 +2,9 @@
 #
 # gencrypt - gpg encrypt files
 #
-# @(#) $Revision: 1.5 $
-# @(#) $Id: gencrypt,v 1.5 2011/08/01 11:45:51 chongo Exp adm $
-# @(#) $Source: /usr/local/src/cmd/gencrypt/RCS/gencrypt,v $
+# @(#) $Revision: 1.6 $
+# @(#) $Id: gencrypt,v 1.6 2015/09/06 03:07:48 root Exp $
+# @(#) $Source: /usr/local/src/bin/gencrypt/RCS/gencrypt,v $
 #
 # Copyright (c) 2006-2011 by Landon Curt Noll.  All Rights Reserved.
 #

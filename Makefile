@@ -3,8 +3,8 @@
 #
 # gncrypt - safe gpg file encrypt/decrypt
 #
-# @(#) $Revision: 1.2 $
-# @(#) $Id: Makefile,v 1.2 2006/02/25 23:36:13 chongo Exp root $
+# @(#) $Revision: 1.3 $
+# @(#) $Id: Makefile,v 1.3 2015/09/06 06:58:46 root Exp $
 # @(#) $Source: /usr/local/src/bin/gencrypt/RCS/Makefile,v $
 #
 # Copyright (c) 2006 by Landon Curt Noll.  All Rights Reserved.
