@@ -1,6 +1,6 @@
 #!/usr/bin/env make
 #
-# gncrypt - safe gpg file encrypt/decrypt
+# gencrypt - safe gpg file encrypt/decrypt
 #
 # Copyright (c) 2006,2023 by Landon Curt Noll.  All Rights Reserved.
 #
