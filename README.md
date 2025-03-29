@@ -108,4 +108,4 @@ Decrypt `file3.gpg` and keep the encrypted file:
 
 # Reporting Security Issues
 
-To report a security issue, please visit "[Reporting Security Issues](https://github.com/lcn2/XXX/security/policy)".
+To report a security issue, please visit "[Reporting Security Issues](https://github.com/lcn2/gencrypt/security/policy)".
