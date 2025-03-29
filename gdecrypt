@@ -1,12 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
-# gdecrypt - gpg decrypt a file
+# gdecrypt - gpg decrypt file(s)
 #
-# @(#) $Revision: 1.6 $
-# @(#) $Id: gdecrypt,v 1.6 2015/09/06 03:07:48 root Exp $
-# @(#) $Source: /usr/local/src/bin/gencrypt/RCS/gdecrypt,v $
-#
-# Copyright (c) 2006-2011 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2006,2011,2015,2023,2025 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -26,37 +22,143 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 #
-# chongo (Landon Curt Noll, http://www.isthe.com/chongo/index.html) /\oo/\
+# chongo (Landon Curt Noll) /\oo/\
 #
-# Share and enjoy! :-)
+# http://www.isthe.com/chongo/index.html
+# https://github.com/lcn2
+#
+# Share and enjoy!  :-)
 
 
 # setup
 #
-CODE=0
-KEEP=
-USAGE="$0 [-h] [-k] file.gpg ...
-
-    -h		print help
-    -k		keep encrypted file"
-
-# parse args
+export VERSION="1.6.1 2025-03-28"
+NAME=$(basename "$0")
+export NAME
 #
-set -- `/usr/bin/getopt hk $*`
-if [[ "$?" != 0 ]]; then echo "$USAGE" 1>&2 ; exit 1 ; fi
-while true; do
-    case "$1" in
-    -h) echo "usage: $USAGE" 1>&2 exit 0 ;;
-    -k) KEEP=true ;;
-    --) shift; break ;;
-    *) echo "$0: Fatal internal getopt error" 1>&2 ; exit 2 ;;
-    esac
-    shift
+export V_FLAG=0
+#
+export NOOP=
+export DO_NOT_PROCESS=
+export KEEP=
+export CODE=0
+GPG_TOOL=$(type -P gpg)
+export GPG_TOOL
+
+
+# usage
+#
+export USAGE="usage: $NAME [-h] [-v level] [-V] [-n] [-N] [-k] [-g gpg] file.gpg ...
+
+    -h          print help message and exit
+    -v level    set verbosity level (def level: $V_FLAG)
+    -V          print version string and exit
+
+    -n          go thru the actions, but do not update any files (def: do the action)
+    -N          do not process anything, just parse arguments (def: process something)
+
+    -k          keep encrypted file
+    -g gpg      path to the gpg tool (def: $GPG_TOOL)
+
+    file.gpg ...    gpg encrypted files to decrepit
+
+Exit codes:
+     0         all OK
+     1         some internal tool exited non-zero
+     2         -h and help string printed or -V and version string printed
+     3         command line error
+ >= 10         internal error
+
+$NAME version: $VERSION"
+
+
+# parse command line
+#
+while getopts :hv:VnNkg: flag; do
+  case "$flag" in
+    h) echo "$USAGE"
+        exit 2
+        ;;
+    v) V_FLAG="$OPTARG"
+        ;;
+    V) echo "$VERSION"
+        exit 2
+        ;;
+    n) NOOP="-n"
+        ;;
+    N) DO_NOT_PROCESS="-N"
+        ;;
+    k) KEEP="true"
+        ;;
+    g) GPG_TOOL="$OPTARG"
+        ;;
+    \?) echo "$0: ERROR: invalid option: -$OPTARG" 1>&2
+        echo 1>&2
+        echo "$USAGE" 1>&2
+        exit 3
+        ;;
+    :) echo "$0: ERROR: option -$OPTARG requires an argument" 1>&2
+        echo 1>&2
+        echo "$USAGE" 1>&2
+        exit 3
+        ;;
+    *) echo "$0: ERROR: unexpected value from getopts: $flag" 1>&2
+        echo 1>&2
+        echo "$USAGE" 1>&2
+        exit 3
+        ;;
+  esac
 done
-if [[ "$#" -lt 1 ]]; then
-    echo "$0: missing file arg(s)" 1>&2
-    exit 2
+if [[ $V_FLAG -ge 1 ]]; then
+    echo "$0: debug[1]: debug level: $V_FLAG" 1>&2
 fi
+#
+# remove the options
+#
+shift $(( OPTIND - 1 ));
+#
+# verify arg count
+#
+if [[ $# -lt 1 ]]; then
+    echo "$0: ERROR: expected at least 1 arg, found: $#" 1>&2
+    echo "$USAGE" 1>&2
+    exit 3
+fi
+
+
+# print running info if verbose
+#
+# If -v 3 or higher, print exported variables in order that they were exported.
+#
+if [[ $V_FLAG -ge 3 ]]; then
+    echo "$0: debug[3]: VERSION=$VERSION" 1>&2
+    echo "$0: debug[3]: NAME=$NAME" 1>&2
+    echo "$0: debug[3]: V_FLAG=$V_FLAG" 1>&2
+    echo "$0: debug[3]: NOOP=$NOOP" 1>&2
+    echo "$0: debug[3]: DO_NOT_PROCESS=$DO_NOT_PROCESS" 1>&2
+    echo "$0: debug[3]: KEEP=$KEEP" 1>&2
+    echo "$0: debug[3]: CODE=$CODE" 1>&2
+    echo "$0: debug[3]: GPG_TOOL=$GPG_TOOL" 1>&2
+fi
+
+
+# verify we have the gpg tool
+#
+if [[ ! -x $GPG_TOOL ]]; then
+    echo "$0: ERROR: cannot find gpg tool: $GPG_TOOL" 1>&2
+    exit 4
+fi
+
+
+# -N stops early before any processing is performed
+#
+if [[ -n $DO_NOT_PROCESS ]]; then
+    if [[ $V_FLAG -ge 3 ]]; then
+        echo "$0: debug[3]: arguments parsed, -N given, exiting 0" 1>&2
+    fi
+    exit 0
+fi
+
 
 # decrypt files
 #
@@ -66,83 +168,95 @@ while [[ $# -gt 0 ]]; do
     #
     arg="$1"
     shift
-    export dir=$(dirname "$arg")
-    export gpgbase=$(basename "$arg")
+    dir=$(dirname "$arg")
+    export dir
+    gpgbase=$(basename "$arg")
+    export gpgbase
     gpgfile="$dir/$gpgbase"
     filebase="${gpgbase%.gpg}"
     file="$dir/$filebase"
 
     # firewall
     #
-    if [[ ! -e "$gpgfile" ]]; then
-	echo "$0: $arg: $gpgfile does not exist, skipping" 1>&2
-	CODE=3
-	continue
-    fi
-    if [[ ! -f "$gpgfile" ]]; then
-	echo "$0: $arg: $gpgfile is not a file, skipping" 1>&2
-	CODE=4
-	continue
-    fi
-    if [[ ! -r "$gpgfile" ]]; then
-	echo "$0: $arg: $gpgfile is not readable, skipping" 1>&2
+    if [[ ! -e $gpgfile ]]; then
+	echo "$0: ERROR: $arg: $gpgfile does not exist, skipping" 1>&2
 	CODE=5
 	continue
     fi
-    if [[ ! -w "$dir" ]]; then
-	echo "$0: $arg: $dir is not in a writable directory, skipping" 1>&2
+    if [[ ! -f $gpgfile ]]; then
+	echo "$0: ERROR: $arg: $gpgfile is not a file, skipping" 1>&2
 	CODE=6
 	continue
     fi
-    if [[ "$file" = "$gpgfile" ]]; then
-	echo "$0: $arg: $gpgfile: does not end in .gpg, skipping" 1>&2
+    if [[ ! -r $gpgfile ]]; then
+	echo "$0: ERROR: $arg: $gpgfile is not readable, skipping" 1>&2
 	CODE=7
 	continue
     fi
-    if [[ -e "$file" ]]; then
-	echo "$0: $arg: $file exists, skipping" 1>&2
+    if [[ ! -w $dir ]]; then
+	echo "$0: ERROR: $arg: $dir is not in a writable directory, skipping" 1>&2
 	CODE=8
+	continue
+    fi
+    if [[ "$file" = "$gpgfile" ]]; then
+	echo "$0: ERROR: $arg: $gpgfile: does not end in .gpg, skipping" 1>&2
+	CODE=9
+	continue
+    fi
+    if [[ -e $file ]]; then
+	echo "$0: ERROR: $arg: $file exists, skipping" 1>&2
+	CODE=10
 	continue
     fi
 
     # decrypt
     #
-    echo "decrypting $gpgfile"
-    gpg --gnupg --decrypt-files "$gpgfile"
-    status="$?"
-    if [[ $status -ne 0 ]]; then
-	echo "$0: $arg: gpg error code: $status" 1>&2
-	CODE=9
-	continue
+    if [[ $V_FLAG -ge 1 ]]; then
+	echo "$0: debug[1]: decrypting $gpgfile" 1>&2
     fi
-    if [[ ! -f "$file" ]]; then
-	echo "$0: $arg: missing decrypted file: $file" 1>&2
-	CODE=10
-	continue
-    fi
-    if [[ ! -s "$file" ]]; then
-	echo "$0: $arg: empty decrypted file: $file" 1>&2
-	CODE=11
-	continue
-    fi
+    if [[ -z $NOOP ]]; then
 
-    # remove the gpgfile we no longer need, unless -k
-    #
-    if [ -z "$KEEP" ]; then
-	echo "removing old $dir/$gpgbase"
-	rm -f "$dir/$gpgbase"
-	if [[ -e "$dir/$gpgbase" ]]; then
-	    echo "$0: $arg: cannot remove old: $gpgbase" 1>&2
+	"$GPG_TOOL" --gnupg --decrypt-files "$gpgfile"
+	status="$?"
+	if [[ $status -ne 0 ]]; then
+	    echo "$0: ERROR: $arg: gpg error code: $status" 1>&2
+	    CODE=11
+	    continue
+	fi
+	if [[ ! -f $file ]]; then
+	    echo "$0: ERROR: $arg: missing decrypted file: $file" 1>&2
 	    CODE=12
 	    continue
 	fi
-	if [[ -f "$dir/$gpgfile" ]]; then
-	    echo "$0: $arg: wipe did not remove file" 1>&2
+	if [[ ! -s $file ]]; then
+	    echo "$0: ERROR: $arg: empty decrypted file: $file" 1>&2
 	    CODE=13
 	    continue
 	fi
     fi
+
+    # remove the gpgfile we no longer need, unless -k
+    #
+    if [[ -z $NOOP ]]; then
+	if [[ -z $KEEP ]]; then
+	    if [[ $V_FLAG -ge 1 ]]; then
+		echo "$0: debug[1]: removing old $dir/$gpgbase" 1>&2
+	    fi
+	    rm -f "$dir/$gpgbase"
+	    if [[ -e "$dir/$gpgbase" ]]; then
+		echo "$0: ERROR: $arg: cannot remove old: $gpgbase" 1>&2
+		CODE=14
+		continue
+	    fi
+	    if [[ -f $dir/$gpgfile ]]; then
+		echo "$0: ERROR: $arg: wipe did not remove file" 1>&2
+		CODE=15
+		continue
+	    fi
+	fi
+    fi
 done
+
 
 # All Done!!! -- Jessica Noll, Age 2
 #
