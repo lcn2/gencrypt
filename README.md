@@ -12,12 +12,45 @@ sudo make install
 ```
 
 
+# Examples
+
+
+## gencrypt - gpg encrypt file(s)
+
+Encrypt `file1` and `file2` using the gpg key `user@example.org`, and then wipe the original files after encrypting:
+
+```sh
+$ /usr/local/bin/gencrypt -v 1 user@example.org file1 file2
+```
+
+Encrypt `file3` using the gpg key `user@example.org`, but keep the original:
+
+```sh
+$ /usr/local/bin/gencrypt -v 1 -k user@example.org file3
+```
+
+
+## gdecrypt - gpg decrypt file(s)
+
+Decrypt `file1.gpg` and `file2.gpg` and then remove the encrypted files:
+
+```sh
+$ /usr/local/bin/gdecrypt -v 1 file1.gpg file2.gpg
+```
+
+Decrypt `file3.gpg` and keep the encrypted file:
+
+```sh
+$ /usr/local/bin/gdecrypt -v 1 -k user@example.org file3.gpg
+```
+
+
 # To use
 
 
 ## gencrypt - gpg encrypt file(s)
 
-```sh
+```
 /usr/local/bin/gencrypt [-h] [-v level] [-V] [-n] [-N] [-k] [-g gpg] [-w wipe] key_name file ...
 
     -h          print help message and exit
@@ -47,7 +80,7 @@ gencrypt version: 1.6.1 2025-03-28
 
 ## gdecrypt - gpg decrypt file(s)
 
-```sh
+```
 /usr/local/bin/gdecrypt [-h] [-v level] [-V] [-n] [-N] [-k] [-g gpg] file.gpg ...
 
     -h          print help message and exit
@@ -70,39 +103,6 @@ Exit codes:
  >= 10         internal error
 
 gdecrypt version: 1.6.1 2025-03-28
-```
-
-
-# Examples
-
-
-## gencrypt - gpg encrypt file(s)
-
-Encrypt `file1` and `file2` using the gpg key `user@example.org`, and then wipe the original files after encrypting:
-
-```sh
-/usr/local/bin/gencrypt -v 1 user@example.org file1 file2
-```
-
-Encrypt `file3` using the gpg key `user@example.org`, but keep the original:
-
-```sh
-/usr/local/bin/gencrypt -v 1 -k user@example.org file3
-```
-
-
-## gdecrypt - gpg decrypt file(s)
-
-Decrypt `file1.gpg` and `file2.gpg` and then remove the encrypted files:
-
-```sh
-/usr/local/bin/gdecrypt -v 1 file1.gpg file2.gpg
-```
-
-Decrypt `file3.gpg` and keep the encrypted file:
-
-```sh
-/usr/local/bin/gdecrypt -v 1 -k user@example.org file3.gpg
 ```
 
 
